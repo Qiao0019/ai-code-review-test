@@ -22,12 +22,8 @@ jobs:
       REVIEW_TOOL_REPO: https://gitee.com/qiao-yongheng/ai-code-review.git
 
     steps:
-      - name: Checkout code review tool
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.REVIEW_TOOL_REPO }}
-          path: review-tool
-          fetch-depth: 1
+      - name: Clone code review tool from Gitee
+        run: git clone --depth 1 ${{ env.REVIEW_TOOL_REPO }} review-tool
 
       - name: Set up JDK 11
         uses: actions/setup-java@v4

@@ -35,15 +35,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          key: maven-${{ hashFiles('review-tool/**/pom.xml') }}
+          key: maven-${{ hashFiles('review-tool/ai-code-review-init-project/**/pom.xml') }}
           restore-keys: maven-
 
       - name: Build review service
-        run: mvn -B clean package -DskipTests --file review-tool/pom.xml
+        run: mvn -B clean package -DskipTests --file review-tool/ai-code-review-init-project/pom.xml
 
       - name: Start review service
         run: |
-          JAR_FILE=$(find review-tool/openai-code-review-sdk/target -name "*.jar" -not -name "*sources*" | head -1)
+          JAR_FILE=$(find review-tool/ai-code-review-init-project/openai-code-review-sdk/target -name "*.jar" -not -name "*sources*" | head -1)
           java -jar "$JAR_FILE" --server &
           echo "Waiting for service to start..."
           for i in $(seq 1 30); do

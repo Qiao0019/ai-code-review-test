@@ -56,7 +56,12 @@ jobs:
         env:
           CODE_TOKEN: ${{ secrets.CODE_TOKEN }}
           ZHIPU_API_KEY_SECRET: ${{ secrets.ZHIPU_API_KEY_SECRET }}
-          SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration
+          # 使用 H2 内存数据库，无需外部 MySQL
+          SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+          SPRING_DATASOURCE_USERNAME: sa
+          SPRING_DATASOURCE_PASSWORD:
+          SPRING_H2_CONSOLE_ENABLED: true
 
       - name: Trigger AI review
         id: trigger

@@ -1,2 +1,3 @@
 # openAl_coding
-基于OpenAl的代码审查插件
+
+测试Al的代码审查工具的仓库

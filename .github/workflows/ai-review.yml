@@ -17,6 +17,17 @@ jobs:
   ai-review:
     runs-on: ubuntu-latest
 
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       # ⚠️ 修改为你的代码审查工具仓库地址
       REVIEW_TOOL_REPO: https://gitee.com/qiao-yongheng/ai-code-review.git
@@ -62,6 +73,9 @@ jobs:
           SPRING_DATASOURCE_USERNAME: sa
           SPRING_DATASOURCE_PASSWORD:
           SPRING_H2_CONSOLE_ENABLED: true
+          # Redis 配置
+          SPRING_REDIS_HOST: localhost
+          SPRING_REDIS_PORT: 6379
 
       - name: Trigger AI review
         id: trigger

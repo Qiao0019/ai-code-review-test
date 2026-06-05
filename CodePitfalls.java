@@ -11,11 +11,7 @@ public class CodePitfalls {
     // 坑1: 使用可变对象作为HashMap的key
     private Map<User, String> userMap = new HashMap<>();
     
-    // 坑2: 静态集合导致的内存泄漏
-    private static List<String> staticList = new ArrayList<>();
-    
-    // 坑3: 未正确初始化的线程池
-    private ExecutorService executorService;
+
     
     /**
      * 坑1: 可变对象作为HashMap key - 修改key后无法获取value

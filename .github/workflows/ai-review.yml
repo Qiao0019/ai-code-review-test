@@ -17,22 +17,24 @@ jobs:
   ai-review:
     runs-on: ubuntu-latest
 
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli -h 127.0.0.1 -p 6379 ping || exit 1"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
-
     env:
       # ⚠️ 修改为你的代码审查工具仓库地址
       REVIEW_TOOL_REPO: https://gitee.com/qiao-yongheng/ai-code-review.git
 
     steps:
+      - name: Start Redis
+        run: |
+          docker run -d --name redis -p 6379:6379 redis:7-alpine
+          echo "Waiting for Redis to be ready..."
+          for i in $(seq 1 30); do
+            if docker exec redis redis-cli ping 2>/dev/null | grep -q PONG; then
+              echo "Redis is ready"
+              break
+            fi
+            echo "Redis not ready, retrying... ($i/30)"
+            sleep 1
+          done
+
       - name: Clone code review tool from Gitee
         run: git clone --depth 1 ${{ env.REVIEW_TOOL_REPO }} review-tool
 
@@ -51,18 +53,6 @@ jobs:
 
       - name: Build review service
         run: mvn -B clean package -DskipTests --file review-tool/ai-code-review-init-project/pom.xml
-
-      - name: Wait for Redis to be ready
-        run: |
-          echo "Waiting for Redis..."
-          for i in $(seq 1 30); do
-            if (echo > /dev/tcp/127.0.0.1/6379) 2>/dev/null; then
-              echo "Redis is ready"
-              break
-            fi
-            echo "Redis not ready, retrying... ($i/30)"
-            sleep 2
-          done
 
       - name: Start review service
         run: |

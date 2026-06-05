@@ -64,4 +64,62 @@ public class CollectionUtils {
         }
         return String.join(delimiter, collection);
     }
+    
+    public static <T> List<T> distinct(List<T> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        return list.stream()
+                .distinct()
+                .collect(Collectors.toList());
+    }
+    
+    public static <T> List<T> take(List<T> list, int n) {
+        if (list == null || n <= 0) {
+            return Collections.emptyList();
+        }
+        return list.stream()
+                .limit(n)
+                .collect(Collectors.toList());
+    }
+    
+    public static <T> List<T> drop(List<T> list, int n) {
+        if (list == null || n <= 0) {
+            return list != null ? new ArrayList<>(list) : Collections.emptyList();
+        }
+        return list.stream()
+                .skip(n)
+                .collect(Collectors.toList());
+    }
+    
+    public static <T> List<T> sort(List<T> list, Comparator<T> comparator) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        if (comparator == null) {
+            return new ArrayList<>(list);
+        }
+        List<T> result = new ArrayList<>(list);
+        result.sort(comparator);
+        return result;
+    }
+    
+    public static <T> Optional<T> last(List<T> list) {
+        if (list == null || list.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(list.get(list.size() - 1));
+    }
+    
+    public static <T> Map<T, Long> groupByCount(List<T> list) {
+        if (list == null) {
+            return Collections.emptyMap();
+        }
+        return list.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(
+                        Function.identity(),
+                        Collectors.counting()
+                ));
+    }
 }

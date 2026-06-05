@@ -66,4 +66,70 @@ public class ObjectPool<T> {
     public boolean isEmpty() {
         return pool.isEmpty();
     }
+    
+    public T acquire(long timeout, TimeUnit unit) throws InterruptedException {
+        T obj = pool.poll();
+        if (obj != null) {
+            return obj;
+        }
+        
+        long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
+        while (System.currentTimeMillis() < deadline) {
+            synchronized (this) {
+                if (pool.size() < maxSize) {
+                    return creator.get();
+                }
+            }
+            obj = pool.poll(10, TimeUnit.MILLISECONDS);
+            if (obj != null) {
+                return obj;
+            }
+        }
+        
+        return null;
+    }
+    
+    public List<T> acquireBulk(int count) {
+        if (count <= 0) {
+            return Collections.emptyList();
+        }
+        List<T> result = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            T obj = acquire();
+            if (obj != null) {
+                result.add(obj);
+            }
+        }
+        return result;
+    }
+    
+    public void releaseBulk(List<T> objects) {
+        if (objects == null || objects.isEmpty()) {
+            return;
+        }
+        for (T obj : objects) {
+            release(obj);
+        }
+    }
+    
+    public void refill(int targetSize) {
+        if (targetSize <= 0) {
+            return;
+        }
+        int currentSize = pool.size();
+        int toAdd = Math.max(0, Math.min(targetSize - currentSize, maxSize - currentSize));
+        
+        for (int i = 0; i < toAdd; i++) {
+            pool.offer(creator.get());
+        }
+    }
+    
+    public void drain() {
+        List<T> drained = new ArrayList<>();
+        pool.drainTo(drained);
+    }
+    
+    public boolean isFull() {
+        return pool.size() >= maxSize;
+    }
 }

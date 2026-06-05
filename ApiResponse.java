@@ -75,4 +75,51 @@ public class ApiResponse<T> {
     public boolean isSuccess() {
         return code >= 200 && code < 300;
     }
+    
+    public static <T> ApiResponse<T> accepted(T data) {
+        return new ApiResponse<>(202, "Accepted", data);
+    }
+    
+    public static <T> ApiResponse<T> movedPermanently(String location) {
+        ApiResponse<T> response = new ApiResponse<>(301, "Moved Permanently", null);
+        response.message = "Location: " + location;
+        return response;
+    }
+    
+    public static <T> ApiResponse<T> conflict(String message) {
+        return new ApiResponse<>(409, message, null);
+    }
+    
+    public static <T> ApiResponse<T> tooManyRequests(String message) {
+        return new ApiResponse<>(429, message, null);
+    }
+    
+    public static <T> ApiResponse<T> serviceUnavailable(String message) {
+        return new ApiResponse<>(503, message, null);
+    }
+    
+    public ApiResponse<T> withCode(int code) {
+        this.code = code;
+        return this;
+    }
+    
+    public ApiResponse<T> withMessage(String message) {
+        this.message = message;
+        return this;
+    }
+    
+    public ApiResponse<T> withData(T data) {
+        this.data = data;
+        return this;
+    }
+    
+    public static <T> ApiResponse<T> pagination(List<T> data, long total, int page, int pageSize) {
+        Map<String, Object> paginationData = new HashMap<>();
+        paginationData.put("items", data);
+        paginationData.put("total", total);
+        paginationData.put("page", page);
+        paginationData.put("pageSize", pageSize);
+        paginationData.put("totalPages", (total + pageSize - 1) / pageSize);
+        return new ApiResponse<>(200, "Success", (T) paginationData);
+    }
 }

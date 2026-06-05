@@ -112,4 +112,83 @@ public class UserInputValidator {
             return String.join("; ", errors);
         }
     }
+    
+    private static final Pattern URL_PATTERN = Pattern.compile(
+            "^(https?|ftp)://[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)+(/\\S*)?$"
+    );
+    
+    private static final Pattern IP_PATTERN = Pattern.compile(
+            "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+    );
+    
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile(
+            "^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$"
+    );
+    
+    public static ValidationResult validateUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return ValidationResult.failure("URL cannot be empty");
+        }
+        if (!URL_PATTERN.matcher(url).matches()) {
+            return ValidationResult.failure("Invalid URL format");
+        }
+        return ValidationResult.success();
+    }
+    
+    public static ValidationResult validateIpAddress(String ip) {
+        if (ip == null || ip.isBlank()) {
+            return ValidationResult.failure("IP address cannot be empty");
+        }
+        if (!IP_PATTERN.matcher(ip).matches()) {
+            return ValidationResult.failure("Invalid IP address format");
+        }
+        return ValidationResult.success();
+    }
+    
+    public static ValidationResult validateHexColor(String color) {
+        if (color == null || color.isBlank()) {
+            return ValidationResult.failure("Color cannot be empty");
+        }
+        if (!HEX_COLOR_PATTERN.matcher(color).matches()) {
+            return ValidationResult.failure("Invalid hex color format");
+        }
+        return ValidationResult.success();
+    }
+    
+    public static ValidationResult validateAge(int age, int minAge, int maxAge) {
+        if (age < minAge || age > maxAge) {
+            return ValidationResult.failure("Age must be between " + minAge + " and " + maxAge);
+        }
+        return ValidationResult.success();
+    }
+    
+    public static ValidationResult validateStringLength(String str, int minLength, int maxLength, String fieldName) {
+        if (str == null) {
+            return ValidationResult.failure(fieldName + " cannot be null");
+        }
+        if (str.length() < minLength) {
+            return ValidationResult.failure(fieldName + " must be at least " + minLength + " characters");
+        }
+        if (str.length() > maxLength) {
+            return ValidationResult.failure(fieldName + " must not exceed " + maxLength + " characters");
+        }
+        return ValidationResult.success();
+    }
+    
+    public static ValidationResult validateInRange(Number value, Number min, Number max, String fieldName) {
+        if (value == null) {
+            return ValidationResult.failure(fieldName + " cannot be null");
+        }
+        if (value.doubleValue() < min.doubleValue() || value.doubleValue() > max.doubleValue()) {
+            return ValidationResult.failure(fieldName + " must be between " + min + " and " + max);
+        }
+        return ValidationResult.success();
+    }
+    
+    public static ValidationResult validatePositive(Number value, String fieldName) {
+        if (value == null || value.doubleValue() <= 0) {
+            return ValidationResult.failure(fieldName + " must be positive");
+        }
+        return ValidationResult.success();
+    }
 }

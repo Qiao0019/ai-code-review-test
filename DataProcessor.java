@@ -124,4 +124,42 @@ public class DataProcessor {
             return false;
         }
     }
+    
+    public String readFileAsString(String path) throws IOException {
+        if (path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Path cannot be null or blank");
+        }
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        return content.toString();
+    }
+    
+    public void writeStringToFile(String content, String path) throws IOException {
+        if (content == null || path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Content and path cannot be null or blank");
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+            writer.write(content);
+        }
+    }
+    
+    public Map<String, String> parseQueryString(String queryString) {
+        if (queryString == null || queryString.isBlank()) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> params = new HashMap<>();
+        String[] pairs = queryString.split("&");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=", 2);
+            if (keyValue.length == 2) {
+                params.put(keyValue[0], keyValue[1]);
+            }
+        }
+        return params;
+    }
 }

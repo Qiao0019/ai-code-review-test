@@ -8,22 +8,29 @@ import java.text.SimpleDateFormat;
 public class DataProcessor {
     
     private static final String DB_PASSWORD_ENV = "DB_PASSWORD";
-    private static final String API_KEY_ENV = "API_KEY";
+    private static final String DB_URL_ENV = "DB_URL";
+    private static final String DB_USER_ENV = "DB_USER";
     
-    public void processCommand(String[] commandArgs) {
+    public void processCommand(String[] commandArgs, long timeoutMs) {
         if (commandArgs == null || commandArgs.length == 0) {
             throw new IllegalArgumentException("Command arguments cannot be empty");
         }
         
         Runtime runtime = Runtime.getRuntime();
         try {
-            runtime.exec(commandArgs);
+            Process process = runtime.exec(commandArgs);
+            if (timeoutMs > 0) {
+                process.waitFor(timeoutMs, TimeUnit.MILLISECONDS);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to execute command", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Command execution interrupted", e);
         }
     }
     
-    public void saveUserData(String userData, String filename) throws IOException {
+    public void saveUserData(String userData, String filename, boolean append) throws IOException {
         if (userData == null) {
             throw new IllegalArgumentException("User data cannot be null");
         }
@@ -31,7 +38,7 @@ public class DataProcessor {
             throw new IllegalArgumentException("Filename cannot be null or blank");
         }
         
-        try (FileWriter writer = new FileWriter(filename)) {
+        try (FileWriter writer = new FileWriter(filename, append)) {
             writer.write(userData);
         }
     }
@@ -122,6 +129,78 @@ public class DataProcessor {
             return true;
         } catch (IllegalArgumentException e) {
             return false;
+        }
+    }
+    
+    public String readFileAsString(String path) throws IOException {
+        if (path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Path cannot be null or blank");
+        }
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        }
+        return content.toString();
+    }
+    
+    public void writeStringToFile(String content, String path) throws IOException {
+        if (content == null || path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Content and path cannot be null or blank");
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+            writer.write(content);
+        }
+    }
+    
+    public Map<String, String> parseQueryString(String queryString) {
+        if (queryString == null || queryString.isBlank()) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> params = new HashMap<>();
+        String[] pairs = queryString.split("&");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=", 2);
+            if (keyValue.length == 2) {
+                params.put(keyValue[0], keyValue[1]);
+            }
+        }
+        return params;
+    }
+    
+    public String buildQueryString(Map<String, String> params) {
+        if (params == null || params.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (!first) {
+                sb.append("&");
+            }
+            sb.append(entry.getKey()).append("=").append(entry.getValue());
+            first = false;
+        }
+        return sb.toString();
+    }
+    
+    public byte[] readFileAsBytes(String path) throws IOException {
+        if (path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Path cannot be null or blank");
+        }
+        try (InputStream is = new FileInputStream(path)) {
+            return is.readAllBytes();
+        }
+    }
+    
+    public void writeBytesToFile(byte[] data, String path) throws IOException {
+        if (data == null || path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Data and path cannot be null or blank");
+        }
+        try (OutputStream os = new FileOutputStream(path)) {
+            os.write(data);
         }
     }
 }

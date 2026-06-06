@@ -26,20 +26,27 @@ public class StringUtils {
         return trimmed.isEmpty() ? null : trimmed;
     }
     
-    public static String truncate(String str, int maxLength) {
-        if (str == null || str.length() <= maxLength) {
+    public static String truncate(String str, int maxLength, String suffix) {
+        if (str == null) {
+            return null;
+        }
+        if (maxLength <= 0) {
+            return suffix != null ? suffix : "";
+        }
+        if (str.length() <= maxLength) {
             return str;
         }
-        return str.substring(0, maxLength) + "...";
+        String truncationSuffix = suffix != null ? suffix : "...";
+        return str.substring(0, maxLength - truncationSuffix.length()) + truncationSuffix;
     }
     
-    public static List<String> split(String str, String delimiter) {
+    public static List<String> split(String str, String delimiter, boolean includeEmpty) {
         if (isBlank(str) || delimiter == null) {
             return List.of();
         }
         return Arrays.stream(str.split(delimiter))
                 .map(String::trim)
-                .filter(s -> !s.isEmpty())
+                .filter(s -> includeEmpty || !s.isEmpty())
                 .collect(Collectors.toList());
     }
     
@@ -70,5 +77,85 @@ public class StringUtils {
             return false;
         }
         return str.toLowerCase().contains(searchStr.toLowerCase());
+    }
+    
+    public static String mask(String str, int start, int end, char maskChar) {
+        if (isBlank(str) || start < 0 || end < 0 || start >= end) {
+            return str;
+        }
+        int length = str.length();
+        if (end > length) {
+            end = length;
+        }
+        StringBuilder sb = new StringBuilder(str);
+        for (int i = start; i < end; i++) {
+            sb.setCharAt(i, maskChar);
+        }
+        return sb.toString();
+    }
+    
+    public static String maskEmail(String email) {
+        if (isBlank(email)) {
+            return email;
+        }
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 1) {
+            return email;
+        }
+        return email.charAt(0) + "*".repeat(Math.min(4, atIndex - 1)) + email.substring(atIndex);
+    }
+    
+    public static String maskPhone(String phone) {
+        if (isBlank(phone) || phone.length() < 7) {
+            return phone;
+        }
+        return phone.substring(0, 3) + "****" + phone.substring(7);
+    }
+    
+    public static String repeat(String str, int count) {
+        if (isBlank(str) || count <= 0) {
+            return "";
+        }
+        return str.repeat(count);
+    }
+    
+    public static String padStart(String str, int minLength, char padChar) {
+        if (str == null) {
+            str = "";
+        }
+        if (str.length() >= minLength) {
+            return str;
+        }
+        return String.valueOf(padChar).repeat(minLength - str.length()) + str;
+    }
+    
+    public static String padEnd(String str, int minLength, char padChar) {
+        if (str == null) {
+            str = "";
+        }
+        if (str.length() >= minLength) {
+            return str;
+        }
+        return str + String.valueOf(padChar).repeat(minLength - str.length());
+    }
+    
+    public static String reverse(String str) {
+        if (isBlank(str)) {
+            return str;
+        }
+        return new StringBuilder(str).reverse().toString();
+    }
+    
+    public static int countOccurrences(String str, String substring) {
+        if (isBlank(str) || isBlank(substring)) {
+            return 0;
+        }
+        int count = 0;
+        int index = 0;
+        while ((index = str.indexOf(substring, index)) != -1) {
+            count++;
+            index += substring.length();
+        }
+        return count;
     }
 }

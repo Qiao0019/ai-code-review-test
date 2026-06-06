@@ -42,17 +42,22 @@ public class AppProperties {
     }
     
     public static class Security {
-        private String jwtSecret = "default-secret-key";
+        private String jwtSecretEnv = "JWT_SECRET";
         private Duration jwtExpiration = Duration.ofHours(24);
-        private boolean enableCsrf = false;
-        private int maxLoginAttempts = 5;
+        private boolean enableCsrf = true;
+        private int maxLoginAttempts = 3;
+        private Duration lockoutDuration = Duration.ofMinutes(15);
         
         public String getJwtSecret() {
-            return jwtSecret;
+            return System.getenv(jwtSecretEnv);
         }
         
-        public void setJwtSecret(String jwtSecret) {
-            this.jwtSecret = jwtSecret;
+        public void setJwtSecretEnv(String jwtSecretEnv) {
+            this.jwtSecretEnv = jwtSecretEnv;
+        }
+        
+        public String getJwtSecretEnv() {
+            return jwtSecretEnv;
         }
         
         public Duration getJwtExpiration() {
@@ -77,6 +82,14 @@ public class AppProperties {
         
         public void setMaxLoginAttempts(int maxLoginAttempts) {
             this.maxLoginAttempts = maxLoginAttempts;
+        }
+        
+        public Duration getLockoutDuration() {
+            return lockoutDuration;
+        }
+        
+        public void setLockoutDuration(Duration lockoutDuration) {
+            this.lockoutDuration = lockoutDuration;
         }
     }
     
@@ -185,6 +198,103 @@ public class AppProperties {
         
         public void setRequestTimeout(int requestTimeout) {
             this.requestTimeout = requestTimeout;
+        }
+    }
+    
+    private Logging logging = new Logging();
+    private FileStorage fileStorage = new FileStorage();
+    
+    public Logging getLogging() {
+        return logging;
+    }
+    
+    public void setLogging(Logging logging) {
+        this.logging = logging;
+    }
+    
+    public FileStorage getFileStorage() {
+        return fileStorage;
+    }
+    
+    public void setFileStorage(FileStorage fileStorage) {
+        this.fileStorage = fileStorage;
+    }
+    
+    public static class Logging {
+        private String level = "INFO";
+        private boolean enableConsole = true;
+        private boolean enableFile = false;
+        private String logPath = "./logs";
+        private String logFilePattern = "application.%d{yyyy-MM-dd}.log";
+        
+        public String getLevel() {
+            return level;
+        }
+        
+        public void setLevel(String level) {
+            this.level = level;
+        }
+        
+        public boolean isEnableConsole() {
+            return enableConsole;
+        }
+        
+        public void setEnableConsole(boolean enableConsole) {
+            this.enableConsole = enableConsole;
+        }
+        
+        public boolean isEnableFile() {
+            return enableFile;
+        }
+        
+        public void setEnableFile(boolean enableFile) {
+            this.enableFile = enableFile;
+        }
+        
+        public String getLogPath() {
+            return logPath;
+        }
+        
+        public void setLogPath(String logPath) {
+            this.logPath = logPath;
+        }
+        
+        public String getLogFilePattern() {
+            return logFilePattern;
+        }
+        
+        public void setLogFilePattern(String logFilePattern) {
+            this.logFilePattern = logFilePattern;
+        }
+    }
+    
+    public static class FileStorage {
+        private String basePath = "./uploads";
+        private long maxFileSize = 52428800;
+        private List<String> allowedExtensions = Arrays.asList("jpg", "jpeg", "png", "pdf", "doc", "docx");
+        
+        public String getBasePath() {
+            return basePath;
+        }
+        
+        public void setBasePath(String basePath) {
+            this.basePath = basePath;
+        }
+        
+        public long getMaxFileSize() {
+            return maxFileSize;
+        }
+        
+        public void setMaxFileSize(long maxFileSize) {
+            this.maxFileSize = maxFileSize;
+        }
+        
+        public List<String> getAllowedExtensions() {
+            return allowedExtensions;
+        }
+        
+        public void setAllowedExtensions(List<String> allowedExtensions) {
+            this.allowedExtensions = allowedExtensions;
         }
     }
 }

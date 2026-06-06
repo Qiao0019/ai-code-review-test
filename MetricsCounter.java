@@ -1,5 +1,7 @@
 package com.test.pitfalls;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -7,40 +9,65 @@ import java.util.concurrent.atomic.AtomicLong;
 public class MetricsCounter {
     
     private final Map<String, AtomicLong> counters = new ConcurrentHashMap<>();
+    private final CounterConfig config;
     
-    public void increment(String key) {
-        if (key == null || key.isBlank()) {
-            throw new IllegalArgumentException("Key cannot be null or blank");
-        }
-        counters.computeIfAbsent(key, k -> new AtomicLong(0)).incrementAndGet();
+    public MetricsCounter() {
+        this.config = CounterConfig.defaultConfig();
     }
     
-    public void incrementBy(String key, long delta) {
-        if (key == null || key.isBlank()) {
-            throw new IllegalArgumentException("Key cannot be null or blank");
+    public MetricsCounter(CounterConfig config) {
+        this.config = config != null ? config : CounterConfig.defaultConfig();
+    }
+    
+    public static class CounterConfig {
+        private final long maxValue;
+        private final boolean autoResetOnMax;
+        
+        public CounterConfig(long maxValue, boolean autoResetOnMax) {
+            this.maxValue = maxValue;
+            this.autoResetOnMax = autoResetOnMax;
         }
-        counters.computeIfAbsent(key, k -> new AtomicLong(0)).addAndGet(delta);
+        
+        public static CounterConfig defaultConfig() {
+            return new CounterConfig(Long.MAX_VALUE, false);
+        }
+        
+        public long getMaxValue() {
+            return maxValue;
+        }
+        
+        public boolean isAutoResetOnMax() {
+            return autoResetOnMax;
+        }
+    }
+    
+    public void increment(String key) {
+        validateKey(key);
+        AtomicLong counter = counters.computeIfAbsent(key, k -> new AtomicLong(0));
+        long newValue = counter.incrementAndGet();
+        if (config.isAutoResetOnMax() && newValue >= config.getMaxValue()) {
+            counter.set(0);
+        }
     }
     
     public void decrement(String key) {
-        if (key == null || key.isBlank()) {
-            throw new IllegalArgumentException("Key cannot be null or blank");
-        }
+        validateKey(key);
         counters.computeIfAbsent(key, k -> new AtomicLong(0)).decrementAndGet();
     }
     
     public long get(String key) {
-        if (key == null || key.isBlank()) {
-            throw new IllegalArgumentException("Key cannot be null or blank");
-        }
+        validateKey(key);
         AtomicLong counter = counters.get(key);
         return counter != null ? counter.get() : 0;
     }
     
+    public void set(String key, long value) {
+        validateKey(key);
+        counters.computeIfAbsent(key, k -> new AtomicLong(0)).set(value);
+    }
+    
     public void reset(String key) {
-        if (key == null || key.isBlank()) {
-            throw new IllegalArgumentException("Key cannot be null or blank");
-        }
+        validateKey(key);
         counters.remove(key);
     }
     
@@ -63,5 +90,19 @@ public class MetricsCounter {
             return false;
         }
         return counters.containsKey(key);
+    }
+    
+    public Map<String, Long> snapshot() {
+        Map<String, Long> snapshot = new HashMap<>();
+        for (Map.Entry<String, AtomicLong> entry : counters.entrySet()) {
+            snapshot.put(entry.getKey(), entry.getValue().get());
+        }
+        return Collections.unmodifiableMap(snapshot);
+    }
+    
+    private void validateKey(String key) {
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException("Key cannot be null or blank");
+        }
     }
 }

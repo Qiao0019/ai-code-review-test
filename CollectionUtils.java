@@ -17,20 +17,26 @@ public class CollectionUtils {
     }
     
     public static <T> Optional<T> findFirst(List<T> list, Predicate<T> predicate) {
-        if (list == null || predicate == null) {
+        if (list == null || list.isEmpty()) {
             return Optional.empty();
+        }
+        if (predicate == null) {
+            return Optional.of(list.get(0));
         }
         return list.stream()
                 .filter(predicate)
                 .findFirst();
     }
     
-    public static <T> List<T> reverse(List<T> list) {
+    public static <T> List<T> reverse(List<T> list, int maxElements) {
         if (list == null) {
             return Collections.emptyList();
         }
         List<T> result = new ArrayList<>(list);
         Collections.reverse(result);
+        if (maxElements > 0 && result.size() > maxElements) {
+            return result.subList(0, maxElements);
+        }
         return result;
     }
     
@@ -63,5 +69,85 @@ public class CollectionUtils {
             delimiter = "";
         }
         return String.join(delimiter, collection);
+    }
+    
+    public static <T> List<T> distinct(List<T> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        return list.stream()
+                .distinct()
+                .collect(Collectors.toList());
+    }
+    
+    public static <T> List<T> take(List<T> list, int n) {
+        if (list == null || n <= 0) {
+            return Collections.emptyList();
+        }
+        return list.stream()
+                .limit(n)
+                .collect(Collectors.toList());
+    }
+    
+    public static <T> List<T> drop(List<T> list, int n) {
+        if (list == null || n <= 0) {
+            return list != null ? new ArrayList<>(list) : Collections.emptyList();
+        }
+        return list.stream()
+                .skip(n)
+                .collect(Collectors.toList());
+    }
+    
+    public static <T> List<T> sort(List<T> list, Comparator<T> comparator) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        if (comparator == null) {
+            return new ArrayList<>(list);
+        }
+        List<T> result = new ArrayList<>(list);
+        result.sort(comparator);
+        return result;
+    }
+    
+    public static <T> Optional<T> last(List<T> list) {
+        if (list == null || list.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(list.get(list.size() - 1));
+    }
+    
+    public static <T> Map<T, Long> groupByCount(List<T> list) {
+        if (list == null) {
+            return Collections.emptyMap();
+        }
+        return list.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(
+                        Function.identity(),
+                        Collectors.counting()
+                ));
+    }
+    
+    public static <T> List<T> flatten(List<List<T>> lists) {
+        if (lists == null) {
+            return Collections.emptyList();
+        }
+        return lists.stream()
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+    
+    public static <T> List<T> partition(List<T> list, int batchSize) {
+        if (list == null || batchSize <= 0) {
+            return Collections.emptyList();
+        }
+        List<List<T>> partitions = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += batchSize) {
+            partitions.add(list.subList(i, Math.min(i + batchSize, list.size())));
+        }
+        return flatten(partitions);
     }
 }

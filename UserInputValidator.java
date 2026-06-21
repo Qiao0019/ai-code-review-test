@@ -79,13 +79,30 @@ public class UserInputValidator {
         return errors.isEmpty() ? ValidationResult.success() : ValidationResult.failure(errors);
     }
     
+    public static ValidationResult validateAll(String email, String phone, String username, String password) {
+        List<ValidationResult> results = new ArrayList<>();
+        results.add(validateEmail(email));
+        results.add(validatePhone(phone));
+        results.add(validateUsername(username));
+        results.add(validatePassword(password));
+        
+        List<String> allErrors = new ArrayList<>();
+        for (ValidationResult result : results) {
+            if (!result.isValid()) {
+                allErrors.addAll(result.getErrors());
+            }
+        }
+        
+        return allErrors.isEmpty() ? ValidationResult.success() : ValidationResult.failure(allErrors);
+    }
+    
     public static class ValidationResult {
         private final boolean valid;
         private final List<String> errors;
         
         private ValidationResult(boolean valid, List<String> errors) {
             this.valid = valid;
-            this.errors = errors;
+            this.errors = errors != null ? List.copyOf(errors) : List.of();
         }
         
         public static ValidationResult success() {
@@ -110,6 +127,15 @@ public class UserInputValidator {
         
         public String getErrorMessage() {
             return String.join("; ", errors);
+        }
+        
+        public ValidationResult combine(ValidationResult other) {
+            if (other == null) {
+                return this;
+            }
+            List<String> combinedErrors = new ArrayList<>(this.errors);
+            combinedErrors.addAll(other.errors);
+            return new ValidationResult(this.valid && other.valid, combinedErrors);
         }
     }
 }
